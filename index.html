@@ -1,78 +1,106 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>左右判定テスト</title>
+<title>Quiz</title>
 <style>
-body { text-align:center; font-family:sans-serif; }
-img { max-width:90%; max-height:60vh; }
-button { font-size:24px; margin:10px; padding:10px 30px; }
+body {
+  text-align: center;
+  font-family: sans-serif;
+}
+
+img {
+  max-width: 90%;
+  height: auto;
+  margin-top: 20px;
+}
+
+button {
+  font-size: 20px;
+  margin: 10px;
+  padding: 10px 20px;
+}
 </style>
 </head>
 
 <body>
 
-<h2 id="counter"></h2>
-<img id="img"><br>
+<h2 id="progress">Loading...</h2>
 
-<button onclick="answer('L')">左</button>
-<button onclick="answer('R')">右</button>
+<img id="img" src="">
+
+<div>
+  <button onclick="answer('distal')">distal</button>
+  <button onclick="answer('mesial')">mesial</button>
+</div>
 
 <script>
-// --- 問題データ（あとで40枚に） ---
-const problems = [
-  {file:"img1.jpg", correct:"L"},
-  {file:"img2.jpg", correct:"R"},
-  {file:"img3.jpg", correct:"L"},
-  {file:"img4.jpg", correct:"R"},
-  {file:"img5.jpg", correct:"L"}
-];
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec";
 
-// ランダム20問抽出
-const shuffled = problems.sort(() => 0.5 - Math.random());
-const questions = shuffled.slice(0, 20);
+// ====== 問題作成 ======
+const problems = [];
 
-let index = 0;
-const answers = [];
+["1distal","1mesial","2distal","2mesial"].forEach(type=>{
+  for(let i=1;i<=10;i++){
+    problems.push({
+      file:`github-dental/${type} (${i}).jpg`,
+      answer: type.includes("distal") ? "distal" : "mesial"
+    });
+  }
+});
 
-function show(){
-  document.getElementById("counter").textContent =
-    `問題 ${index+1} / ${questions.length}`;
+// ランダム20問
+const quiz = problems
+  .sort(()=>Math.random()-0.5)
+  .slice(0,20);
 
-  document.getElementById("img").src =
-    questions[index].file;
-}
+let current = 0;
+let score = 0;
 
-function answer(a){
-  const q = questions[index];
-  const correct = (a === q.correct) ? 1 : 0;
-
-  answers.push(
-    `${q.file}:${a}:${q.correct}:${correct}`
-  );
-
-  index++;
-
-  if(index >= questions.length){
-    finish();
+// ====== 次の問題表示 ======
+function showNext(){
+  if(current >= quiz.length){
+    document.body.innerHTML =
+      `<h2>終了</h2>
+       <p>正答数：${score} / ${quiz.length}</p>`;
     return;
   }
-  show();
+
+  document.getElementById("img").src = quiz[current].file;
+  document.getElementById("progress").innerText =
+    `問題 ${current+1} / ${quiz.length}`;
 }
 
-function finish(){
-  const result = answers.join(",");
+// ====== 回答処理 ======
+function answer(userAnswer){
+  const correct = quiz[current].answer;
+  const isCorrect = userAnswer === correct;
 
-  fetch("https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec", {
+  if(isCorrect) score++;
+
+  sendResult(userAnswer, correct, isCorrect);
+
+  current++;
+  showNext();
+}
+
+// ====== スプレッドシート送信 ======
+function sendResult(userAnswer, correct, isCorrect){
+  fetch(GAS_URL, {
     method: "POST",
-    body: new URLSearchParams({ data: result })
+    body: JSON.stringify({
+      image: quiz[current].file,
+      answer: userAnswer,
+      correct: correct,
+      result: isCorrect,
+      time: new Date().toISOString()
+    })
   });
-
-  document.body.innerHTML =
-    "<h2>回答ありがとうございました</h2>";
 }
 
-show();
+showNext();
 </script>
 
 </body>
