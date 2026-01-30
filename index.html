@@ -1,42 +1,12 @@
-<script>
-const images = [
-  "img1.jpg","img2.jpg","img3.jpg","img4.jpg","img5.jpg"
-];
-
-const shuffled = images.sort(() => 0.5 - Math.random());
-const questions = shuffled.slice(0, 20);
-
-let index = 0;
-const answers = [];
-
-function show() {
-  document.getElementById("counter").textContent =
-    `問題 ${index+1} / ${questions.length}`;
-}
-
-function answer(a){
-  answers.push(`${questions[index]}:${a}`);
-  index++;
-
-  if(index >= questions.length){
-    finish();
-    return;
-  }
-  show();
-}
-
-function finish(){
-  const result = answers.join(",");
-
-  fetch("https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec", {
-    method: "POST",
-    body: new URLSearchParams({ data: result })
-  });
-
-  alert("終了しました。回答を保存しました。");
-
-  document.body.innerHTML = "<h2>回答ありがとうございました</h2>";
-}
-
-show();
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>test</title>
+</head>
+<body>
+<h1>ページ表示テスト</h1>
+<button>○</button>
+<button>×</button>
+</body>
+</html>
