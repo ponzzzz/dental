@@ -25,7 +25,7 @@ const problems = [];
 ["1distal","1mesial","2distal","2mesial"].forEach(type=>{
   for(let i = 1; i <= 10; i++){
     problems.push({
-      file: `github-dental/${type} (${i}).jpeg`,
+      file: `github-dental/${type} (${i}).jpg`,
       correct: type.includes("distal") ? "distal" : "mesial"
     });
   }
