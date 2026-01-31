@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>左右判定テスト</title>
+<title>判定テスト</title>
 <style>
 body { text-align:center; font-family:sans-serif; }
 img { max-width:90%; max-height:60vh; }
@@ -15,18 +15,21 @@ button { font-size:24px; margin:10px; padding:10px 30px; }
 <h2 id="counter"></h2>
 <img id="img"><br>
 
-<button onclick="answer('L')">左</button>
-<button onclick="answer('R')">右</button>
+<button onclick="answer('distal')">distal</button>
+<button onclick="answer('mesial')">mesial</button>
 
 <script>
-// ===== 問題データ（あとで40枚に変更） =====
-const problems = [
-  {file:"img1.jpg", correct:"L"},
-  {file:"img2.jpg", correct:"R"},
-  {file:"img3.jpg", correct:"L"},
-  {file:"img4.jpg", correct:"R"},
-  {file:"img5.jpg", correct:"L"}
-];
+// ===== 問題生成（40枚）=====
+const problems = [];
+
+["1distal","1mesial","2distal","2mesial"].forEach(type=>{
+  for(let i=1;i<=10;i++){
+    problems.push({
+      file:`github-dental/${type} (${i}).jpg`,
+      correct: type.includes("distal") ? "distal" : "mesial"
+    });
+  }
+});
 
 // ===== ランダム20問 =====
 const shuffled = [...problems].sort(() => 0.5 - Math.random());
@@ -50,7 +53,6 @@ function answer(a){
 
   if(correctFlag) score++;
 
-  // 保存形式: 画像名:回答:正解:正誤
   answers.push(
     `${q.file}:${a}:${q.correct}:${correctFlag}`
   );
@@ -67,7 +69,6 @@ function answer(a){
 function finish(){
   const result = answers.join(",");
 
-  // ===== スプレッドシート送信 =====
   fetch("https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec", {
     method: "POST",
     body: new URLSearchParams({ data: result })
