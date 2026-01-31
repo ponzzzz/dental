@@ -4,31 +4,35 @@
 <meta charset="UTF-8">
 <title>判定テスト</title>
 <style>
-body { text-align:center; font-family:sans-serif; }
-img { max-width:90%; max-height:60vh; }
-button { font-size:24px; margin:10px; padding:10px 30px; }
-input { font-size:18px; padding:5px; }
+    body { text-align:center; font-family:sans-serif; padding-top: 50px; }
+    img { max-width:90%; max-height:60vh; border: 1px solid #ccc; margin: 10px 0; }
+    button { font-size:24px; margin:10px; padding:10px 30px; cursor: pointer; }
+    input { font-size:18px; padding:10px; width: 250px; }
+    #quiz { display: none; } /* 最初は隠しておく */
 </style>
 </head>
 
 <body>
 
-<div>
-  名前：<input id="username" placeholder="名前を入力">
+<div id="setup">
+    <h2>判定テストを開始します</h2>
+    <input id="username" placeholder="名前を入力してください">
+    <br>
+    <button onclick="startQuiz()">スタート</button>
 </div>
-<br>
 
-<h2 id="counter"></h2>
-
-<img id="img"><br>
-
-<button onclick="answer('distal')">distal</button>
-<button onclick="answer('mesial')">mesial</button>
+<div id="quiz">
+    <h2 id="counter"></h2>
+    <img id="img"><br>
+    <div>
+        <button onclick="answer('distal')">distal</button>
+        <button onclick="answer('mesial')">mesial</button>
+    </div>
+</div>
 
 <script>
 // ===== 問題生成（40枚）=====
 const problems = [];
-
 ["1distal","1mesial","2distal","2mesial"].forEach(type=>{
   for(let i = 1; i <= 10; i++){
     problems.push({
@@ -38,77 +42,71 @@ const problems = [];
   }
 });
 
-// ===== ランダム20問 =====
+// ===== 変数管理 =====
 const shuffled = [...problems].sort(() => Math.random() - 0.5);
 const questions = shuffled.slice(0, 20);
-
 let index = 0;
 let score = 0;
 const answers = [];
 
-function show(){
-  const name = document.getElementById("username").value;
-
-  if(!name){
-    document.getElementById("counter").textContent =
-      "名前を入力してください";
-    document.getElementById("img").src = "";
-    return;
-  }
-
-  document.getElementById("counter").textContent =
-    `問題 ${index + 1} / ${questions.length}`;
-
-  document.getElementById("img").src =
-    questions[index].file;
+// ===== 開始処理 =====
+function startQuiz() {
+    const name = document.getElementById("username").value.trim();
+    if(!name) {
+        alert("名前を入力してください");
+        return;
+    }
+    // 画面の切り替え
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("quiz").style.display = "block";
+    show();
 }
 
-function answer(a){
-  const name = document.getElementById("username").value;
-
-  if(!name){
-    alert("名前を入力してください");
-    return;
-  }
-
-  const q = questions[index];
-  const correctFlag = (a === q.correct) ? 1 : 0;
-
-  if(correctFlag) score++;
-
-  answers.push(
-    `${q.file}:${a}:${q.correct}:${correctFlag}`
-  );
-
-  index++;
-
-  if(index >= questions.length){
-    finish();
-    return;
-  }
-
-  show();
+// ===== 問題表示 =====
+function show() {
+    document.getElementById("counter").textContent = 
+        `問題 ${index + 1} / ${questions.length}`;
+    document.getElementById("img").src = questions[index].file;
 }
 
-function finish(){
-  const result = answers.join(",");
-  const name = document.getElementById("username").value;
+// ===== 回答処理 =====
+function answer(a) {
+    const q = questions[index];
+    const correctFlag = (a === q.correct) ? 1 : 0;
+    if(correctFlag) score++;
 
-  fetch("https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec", {
-    method: "POST",
-    body: new URLSearchParams({
-      name: name,
-      data: result
-    })
-  });
+    answers.push(`${q.file}:${a}:${q.correct}:${correctFlag}`);
+    index++;
 
-  document.body.innerHTML =
-    `<h2>終了</h2>
-     <p>${name} さん</p>
-     <p>正答数：${score} / ${questions.length}</p>`;
+    if(index >= questions.length){
+        finish();
+    } else {
+        show();
+    }
 }
 
-show();
+// ===== 終了・送信処理 =====
+function finish() {
+    const name = document.getElementById("username").value;
+    const result = answers.join(",");
+
+    fetch("https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec", {
+        method: "POST",
+        mode: "no-cors", // GASへのPOSTでエラーが出る場合はこれを追加
+        body: new URLSearchParams({
+            name: name,
+            data: result
+        })
+    });
+
+    document.body.innerHTML = `
+        <div style="margin-top:50px;">
+            <h2>テスト終了</h2>
+            <p><strong>${name}</strong> さん、お疲れ様でした。</p>
+            <p style="font-size:24px;">正答数：${score} / ${questions.length}</p>
+            <button onclick="location.reload()">もう一度受ける</button>
+        </div>`;
+}
 </script>
 
 </body>
