@@ -7,12 +7,19 @@
 body { text-align:center; font-family:sans-serif; }
 img { max-width:90%; max-height:60vh; }
 button { font-size:24px; margin:10px; padding:10px 30px; }
+input { font-size:18px; padding:5px; }
 </style>
 </head>
 
 <body>
 
+<div>
+  名前：<input id="username" placeholder="名前を入力">
+</div>
+<br>
+
 <h2 id="counter"></h2>
+
 <img id="img"><br>
 
 <button onclick="answer('distal')">distal</button>
@@ -31,7 +38,6 @@ const problems = [];
   }
 });
 
-
 // ===== ランダム20問 =====
 const shuffled = [...problems].sort(() => Math.random() - 0.5);
 const questions = shuffled.slice(0, 20);
@@ -41,6 +47,15 @@ let score = 0;
 const answers = [];
 
 function show(){
+  const name = document.getElementById("username").value;
+
+  if(!name){
+    document.getElementById("counter").textContent =
+      "名前を入力してください";
+    document.getElementById("img").src = "";
+    return;
+  }
+
   document.getElementById("counter").textContent =
     `問題 ${index + 1} / ${questions.length}`;
 
@@ -49,6 +64,13 @@ function show(){
 }
 
 function answer(a){
+  const name = document.getElementById("username").value;
+
+  if(!name){
+    alert("名前を入力してください");
+    return;
+  }
+
   const q = questions[index];
   const correctFlag = (a === q.correct) ? 1 : 0;
 
@@ -70,14 +92,19 @@ function answer(a){
 
 function finish(){
   const result = answers.join(",");
+  const name = document.getElementById("username").value;
 
   fetch("https://script.google.com/macros/s/AKfycbwHCsoQaIbzWGPd5Ft8dAHVV4EWoJwPHtyB5i6rdQWZiqREAjQJsmIw4TgW3-M18GmU/exec", {
     method: "POST",
-    body: new URLSearchParams({ data: result })
+    body: new URLSearchParams({
+      name: name,
+      data: result
+    })
   });
 
   document.body.innerHTML =
     `<h2>終了</h2>
+     <p>${name} さん</p>
      <p>正答数：${score} / ${questions.length}</p>`;
 }
 
